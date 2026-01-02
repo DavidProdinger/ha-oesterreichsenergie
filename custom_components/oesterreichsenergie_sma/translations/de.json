@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "If you need help with the configuration have a look here: https://github.com/ludeeus/integration_blueprint",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "auth": "Username/Password is wrong.",
+      "connection": "Unable to connect to the server.",
+      "unknown": "Unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This entry is already configured."
+    }
+  },
+  "device": {
+    "sma": {
+      "name": "Smart Meter Adapter (SMA)"
+    },
+    "meter": {
+      "name": "Smart Meter"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "1-0:1.8.0": {
+        "name": "Wirkenergie Bezug +A"
+      },
+      "1-0:2.8.0": {
+        "name": "Wirkenergie Lieferung -A"
+      },
+      "1-0:3.8.0": {
+        "name": "Blindenergie Bezug +R"
+      },
+      "1-0:4.8.0": {
+        "name": "Blindenergie Lieferung -R"
+      },
+      "1-0:1.7.0": {
+        "name": "Wirkleistung Bezug +P"
+      },
+      "1-0:2.7.0": {
+        "name": "Wirkleistung Lieferung -P"
+      },
+      "1-0:32.7.0": {
+        "name": "Spannung L1"
+      },
+      "1-0:52.7.0": {
+        "name": "Spannung L2"
+      },
+      "1-0:72.7.0": {
+        "name": "Spannung L3"
+      },
+      "1-0:31.7.0": {
+        "name": "Strom L1"
+      },
+      "1-0:51.7.0": {
+        "name": "Strom L2"
+      },
+      "1-0:71.7.0": {
+        "name": "Strom L3"
+      },
+      "0-0:1.0.0": {
+        "name": "Meter Datum"
+      }
+    }
+  }
+}

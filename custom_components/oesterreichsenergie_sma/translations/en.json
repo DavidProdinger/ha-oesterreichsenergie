@@ -1,0 +1,74 @@
+{
+  "title": "Österreichs Energie Smart Meter Adapter",
+  "config": {
+    "step": {
+      "user": {
+        "description": "If you need help with the configuration have a look here: https://github.com/DavidProdinger/ha-oesterreichsenergie",
+        "data": {
+          "host": "IP Address or Hostname of the Smart Meter Adapter",
+          "verify_ssl": "Verify SSL certificate",
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "auth": "Username/Password is wrong.",
+      "connection": "Unable to connect to the server.",
+      "unknown": "Unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This entry is already configured."
+    }
+  },
+  "device": {
+    "sma": {
+      "name": "Smart Meter Adapter (SMA)"
+    },
+    "meter": {
+      "name": "Smart Meter"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "1-0:1.8.0": {
+        "name": "Forward active energy +A"
+      },
+      "1-0:2.8.0": {
+        "name": "Reverse active energy -A"
+      },
+      "1-0:3.8.0": {
+        "name": "Import reactive energy +R"
+      },
+      "1-0:4.8.0": {
+        "name": "Export reactive energy -R"
+      },
+      "1-0:1.7.0": {
+        "name": "Instantaneous forward active power +P"
+      },
+      "1-0:2.7.0": {
+        "name": "Instantaneous reverse active power -P"
+      },
+      "1-0:32.7.0": {
+        "name": "Instantaneous voltage L1"
+      },
+      "1-0:52.7.0": {
+        "name": "Instantaneous voltage L2"
+      },
+      "1-0:72.7.0": {
+        "name": "Instantaneous voltage L3"
+      },
+      "1-0:31.7.0": {
+        "name": "Instantaneous current L1"
+      },
+      "1-0:51.7.0": {
+        "name": "Instantaneous current L2"
+      },
+      "1-0:71.7.0": {
+        "name": "Instantaneous current L3"
+      },
+      "0-0:1.0.0": {
+        "name": "Meter date"
+      }
+    }
+  }
+}

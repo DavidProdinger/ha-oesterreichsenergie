@@ -77,7 +77,7 @@ async def async_setup_entry(
         entry_type=dr.DeviceEntryType.SERVICE,
         connections={(dr.CONNECTION_NETWORK_MAC, adapter['wifi']['mac'])},
         identifiers={(entry.domain, f"{entry.entry_id}-sma")},
-        name="Smart-Meter-Adapter (SMA)",
+        translation_key="sma",
         model=adapter['sma_module_type'],
         model_id=adapter['sma_module_type_id'],
         hw_version=adapter['idf_version'],
@@ -90,7 +90,7 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(entry.domain, f"{entry.entry_id}-meter")},
-        name="Smart Meter",
+        translation_key="meter",
         model=meter['supplier'],
         model_id=meter['supplier_id'],
         manufacturer=f"{meter['manufacturer']} {meter['name']}",

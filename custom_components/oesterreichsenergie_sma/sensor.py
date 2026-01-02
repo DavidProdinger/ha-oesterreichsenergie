@@ -8,7 +8,6 @@ from homeassistant.const import UnitOfEnergy, UnitOfReactiveEnergy, UnitOfPower,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import LOGGER
 from .coordinator import SMAMeasurementDataUpdateCoordinator
 from .data import SMAConfigEntry
 from .entity import OeSMAMeasurementEntityBase
@@ -22,7 +21,6 @@ class OeSMASensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTIONS = [
     OeSMASensorEntityDescription(
         key="1-0:1.8.0",
-        name="Forward active energy +A",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -30,7 +28,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:2.8.0",
-        name="Reverse active energy -A",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -38,7 +35,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:3.8.0",
-        name="Import reactive energy +R",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
@@ -46,7 +42,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:4.8.0",
-        name="Export reactive energy -R",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
@@ -54,7 +49,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:1.7.0",
-        name="Instantaneous forward active power +P",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -62,7 +56,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:2.7.0",
-        name="Instantaneous reverse active power -P",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -70,7 +63,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:32.7.0",
-        name="Instantaneous voltage L1",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -78,7 +70,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:52.7.0",
-        name="Instantaneous voltage L2",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -86,7 +77,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:72.7.0",
-        name="Instantaneous voltage L3",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -94,7 +84,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:31.7.0",
-        name="Instantaneous current L1",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -102,7 +91,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:51.7.0",
-        name="Instantaneous current L2",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -110,7 +98,6 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:71.7.0",
-        name="Instantaneous current L3",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -139,7 +126,6 @@ async def async_setup_entry(
             coordinator=entry.runtime_data.measurement_coordinator,
             entity_description=OeSMASensorEntityDescription(
                 key="0-0:1.0.0",
-                name="Meter date",
                 device_class=SensorDeviceClass.DATE,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_visible_default=False,
@@ -159,6 +145,8 @@ class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self.translation_key = entity_description.translation_key or entity_description.key
+
         self._attr_native_value = coordinator.data[entity_description.key]['value']
 
     @callback
@@ -176,6 +164,8 @@ class OeSMAMeterDateSensor(OeSMAMeasurementEntityBase, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        self.translation_key = entity_description.translation_key or entity_description.key
+
         self.set_value(coordinator.data[entity_description.key]['time'])
 
     def set_value(self, value: str | float) -> None:
