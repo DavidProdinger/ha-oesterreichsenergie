@@ -1,21 +1,23 @@
 {
+  "title": "Oesterreichs Energie Smart Meter Adapter",
   "config": {
     "step": {
       "user": {
-        "description": "If you need help with the configuration have a look here: https://github.com/ludeeus/integration_blueprint",
+        "description": "Wenn du Hilfe bei der Konfiguration benötigst, schau dir das hier an: https://github.com/DavidProdinger/ha-oesterreichsenergie",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "host": "IP Adresse oder Hostname vom Smart Meter Adapter",
+          "verify_ssl": "Verify SSL certificate",
+          "token": "Token"
         }
       }
     },
     "error": {
-      "auth": "Username/Password is wrong.",
-      "connection": "Unable to connect to the server.",
-      "unknown": "Unknown error occurred."
+      "auth": "Benutzername/Kennwort ist falsch.",
+      "connection": "Verbindung zum Server konnte nicht hergestellt werden.",
+      "unknown": "Unbekannter Fehler ist aufgetreten."
     },
     "abort": {
-      "already_configured": "This entry is already configured."
+      "already_configured": "Diese Einrichtung ist bereits konfiguriert."
     }
   },
   "device": {

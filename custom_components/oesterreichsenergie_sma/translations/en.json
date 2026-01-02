@@ -1,13 +1,11 @@
 {
-  "title": "Österreichs Energie Smart Meter Adapter",
+  "title": "Oesterreichs Energie Smart Meter Adapter",
   "config": {
     "step": {
       "user": {
         "description": "If you need help with the configuration have a look here: https://github.com/DavidProdinger/ha-oesterreichsenergie",
         "data": {
-          "host": "IP Address or Hostname of the Smart Meter Adapter",
-          "verify_ssl": "Verify SSL certificate",
-          "token": "Token"
+
         }
       }
     },

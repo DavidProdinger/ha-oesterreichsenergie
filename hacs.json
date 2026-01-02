@@ -1,5 +1,6 @@
 {
-    "name": "Oesterreichsenergie",
+    "name": "Oesterreichsenergie Smart Meter Adapter",
+    "country": "AT",
     "homeassistant": "2025.2.4",
     "hacs": "2.0.5"
 }
