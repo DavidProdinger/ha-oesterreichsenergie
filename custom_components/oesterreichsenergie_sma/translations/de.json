@@ -28,43 +28,43 @@
   },
   "entity": {
     "sensor": {
-      "1-0:1.8.0": {
+      "active_energy_import": {
         "name": "Wirkenergie Bezug +A"
       },
-      "1-0:2.8.0": {
+      "active_energy_export": {
         "name": "Wirkenergie Lieferung -A"
       },
-      "1-0:3.8.0": {
+      "reactive_energy_import": {
         "name": "Blindenergie Bezug +R"
       },
-      "1-0:4.8.0": {
+      "reactive_energy_export": {
         "name": "Blindenergie Lieferung -R"
       },
-      "1-0:1.7.0": {
+      "power_import": {
         "name": "Wirkleistung Bezug +P"
       },
-      "1-0:2.7.0": {
+      "power_export": {
         "name": "Wirkleistung Lieferung -P"
       },
-      "1-0:32.7.0": {
+      "voltage_l1": {
         "name": "Spannung L1"
       },
-      "1-0:52.7.0": {
+      "voltage_l2": {
         "name": "Spannung L2"
       },
-      "1-0:72.7.0": {
+      "voltage_l3": {
         "name": "Spannung L3"
       },
-      "1-0:31.7.0": {
+      "current_l1": {
         "name": "Strom L1"
       },
-      "1-0:51.7.0": {
+      "current_l2": {
         "name": "Strom L2"
       },
-      "1-0:71.7.0": {
+      "current_l3": {
         "name": "Strom L3"
       },
-      "0-0:1.0.0": {
+      "meter_date": {
         "name": "Meter Datum"
       }
     }

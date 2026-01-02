@@ -30,43 +30,43 @@
   },
   "entity": {
     "sensor": {
-      "1-0:1.8.0": {
+      "active_energy_import": {
         "name": "Forward active energy +A"
       },
-      "1-0:2.8.0": {
+      "active_energy_export": {
         "name": "Reverse active energy -A"
       },
-      "1-0:3.8.0": {
+      "reactive_energy_import": {
         "name": "Import reactive energy +R"
       },
-      "1-0:4.8.0": {
+      "reactive_energy_export": {
         "name": "Export reactive energy -R"
       },
-      "1-0:1.7.0": {
+      "power_import": {
         "name": "Instantaneous forward active power +P"
       },
-      "1-0:2.7.0": {
+      "power_export": {
         "name": "Instantaneous reverse active power -P"
       },
-      "1-0:32.7.0": {
+      "voltage_l1": {
         "name": "Instantaneous voltage L1"
       },
-      "1-0:52.7.0": {
+      "voltage_l2": {
         "name": "Instantaneous voltage L2"
       },
-      "1-0:72.7.0": {
+      "voltage_l3": {
         "name": "Instantaneous voltage L3"
       },
-      "1-0:31.7.0": {
+      "current_l1": {
         "name": "Instantaneous current L1"
       },
-      "1-0:51.7.0": {
+      "current_l2": {
         "name": "Instantaneous current L2"
       },
-      "1-0:71.7.0": {
+      "current_l3": {
         "name": "Instantaneous current L3"
       },
-      "0-0:1.0.0": {
+      "meter_date": {
         "name": "Meter date"
       }
     }

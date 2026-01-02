@@ -34,6 +34,7 @@ class OeSMASensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTIONS = [
     OeSMASensorEntityDescription(
         key="1-0:1.8.0",
+        translation_key="active_energy_import",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -41,6 +42,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:2.8.0",
+        translation_key="active_energy_export",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -48,6 +50,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:3.8.0",
+        translation_key="reactive_energy_import",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
@@ -55,6 +58,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:4.8.0",
+        translation_key="reactive_energy_export",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
@@ -62,6 +66,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:1.7.0",
+        translation_key="power_import",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -69,6 +74,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:2.7.0",
+        translation_key="power_export",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -76,6 +82,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:32.7.0",
+        translation_key="voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -83,6 +90,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:52.7.0",
+        translation_key="voltage_l2",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -90,6 +98,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:72.7.0",
+        translation_key="voltage_l3",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -97,6 +106,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:31.7.0",
+        translation_key="current_l1",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -104,6 +114,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:51.7.0",
+        translation_key="current_l2",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -111,6 +122,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     OeSMASensorEntityDescription(
         key="1-0:71.7.0",
+        translation_key="current_l3",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -139,6 +151,7 @@ async def async_setup_entry(
                 coordinator=entry.runtime_data.measurement_coordinator,
                 entity_description=OeSMASensorEntityDescription(
                     key="0-0:1.0.0",
+                    translation_key="meter_date",
                     device_class=SensorDeviceClass.DATE,
                     entity_category=EntityCategory.DIAGNOSTIC,
                     entity_registry_visible_default=False,
