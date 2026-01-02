@@ -70,6 +70,7 @@ OBIS_CODES = {
 
 
 def get_meter_number(data: dict) -> str | None:
+    """Try to extract meter number from data."""
     meter_numbers = [
         "0-0:96.1.0",
         "0-0:96.1.1",
