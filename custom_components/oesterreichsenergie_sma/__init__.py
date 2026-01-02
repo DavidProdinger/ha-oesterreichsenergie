@@ -10,14 +10,17 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import Platform, CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
+from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL, Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import SMAApiClient
 from .const import DOMAIN, LOGGER
-from .coordinator import SMAMeasurementDataUpdateCoordinator, SMAStatusDataUpdateCoordinator
+from .coordinator import (
+    SMAMeasurementDataUpdateCoordinator,
+    SMAStatusDataUpdateCoordinator,
+)
 from .data import SMAData
 from .obis import get_meter_number
 
@@ -33,8 +36,8 @@ PLATFORMS: list[Platform] = [
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: SMAConfigEntry,
+    hass: HomeAssistant,
+    entry: SMAConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
     measurement_coordinator = SMAMeasurementDataUpdateCoordinator(
@@ -54,7 +57,9 @@ async def async_setup_entry(
         client=SMAApiClient(
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
-            session=async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL]),
+            session=async_get_clientsession(
+                hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+            ),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         measurement_coordinator=measurement_coordinator,
@@ -75,24 +80,24 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         entry_type=dr.DeviceEntryType.SERVICE,
-        connections={(dr.CONNECTION_NETWORK_MAC, adapter['wifi']['mac'])},
+        connections={(dr.CONNECTION_NETWORK_MAC, adapter["wifi"]["mac"])},
         identifiers={(entry.domain, f"{entry.entry_id}-sma")},
         translation_key="sma",
-        model=adapter['sma_module_type'],
-        model_id=adapter['sma_module_type_id'],
-        hw_version=adapter['idf_version'],
-        sw_version=adapter['fw_version'],
-        manufacturer="Österreichs E‑Wirtschaft",
+        model=adapter["sma_module_type"],
+        model_id=adapter["sma_module_type_id"],
+        hw_version=adapter["idf_version"],
+        sw_version=adapter["fw_version"],
+        manufacturer="Österreichs E-Wirtschaft",
         configuration_url=entry.data[CONF_HOST],
     )
     # meter
-    meter = status_coordinator.data['meter']
+    meter = status_coordinator.data["meter"]
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(entry.domain, f"{entry.entry_id}-meter")},
         translation_key="meter",
-        model=meter['supplier'],
-        model_id=meter['supplier_id'],
+        model=meter["supplier"],
+        model_id=meter["supplier_id"],
         manufacturer=f"{meter['manufacturer']} {meter['name']}",
         serial_number=get_meter_number(measurement_coordinator.data),
         via_device=(entry.domain, f"{entry.entry_id}-sma"),
@@ -102,16 +107,16 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-        hass: HomeAssistant,
-        entry: SMAConfigEntry,
+    hass: HomeAssistant,
+    entry: SMAConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(
-        hass: HomeAssistant,
-        entry: SMAConfigEntry,
+    hass: HomeAssistant,
+    entry: SMAConfigEntry,
 ) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)

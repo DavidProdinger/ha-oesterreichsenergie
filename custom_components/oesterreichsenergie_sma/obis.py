@@ -1,4 +1,9 @@
-# Extracted from https://oesterreichsenergie.at/fileadmin/user_upload/Smart_Meter-Plattform/20200201_Konzept_Kundenschnittstelle_SM.pdf
+"""
+Class for various OBIS codes.
+
+Extracted from https://oesterreichsenergie.at/fileadmin/user_upload/Smart_Meter-Plattform/20200201_Konzept_Kundenschnittstelle_SM.pdf.
+"""
+
 OBIS_CODES = {
     "0-0:1.0.0": "Date and time",
     "0-0:C.1.0": "Meter serial number",
@@ -77,6 +82,6 @@ def get_meter_number(data: dict) -> str | None:
         "0.0.1",
     ]
     for k, v in data.items():
-        if k in meter_numbers and len(v['value'] or v) > 0:
-            return v['value']
+        if k in meter_numbers and len(v["value"] or v) > 0:
+            return v["value"]
     return None

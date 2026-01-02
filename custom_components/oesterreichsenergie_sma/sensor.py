@@ -1,10 +1,23 @@
+"""Representation of Oesterreichsenergie Smart-Meter-Adapter sensors."""
+
 from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from homeassistant.components.sensor import SensorEntityDescription, SensorEntity, SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfReactiveEnergy, UnitOfPower, UnitOfElectricPotential, \
-    UnitOfElectricCurrent, EntityCategory
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfReactiveEnergy,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -103,14 +116,13 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
-
 ]
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
-        entry: SMAConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: SMAConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     async_add_entities(
@@ -121,58 +133,77 @@ async def async_setup_entry(
         for entity_description in ENTITY_DESCRIPTIONS
     )
 
-    async_add_entities({
-        OeSMAMeterDateSensor(
-            coordinator=entry.runtime_data.measurement_coordinator,
-            entity_description=OeSMASensorEntityDescription(
-                key="0-0:1.0.0",
-                device_class=SensorDeviceClass.DATE,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_visible_default=False,
-                entity_registry_enabled_default=False,
-                icon="mdi:calendar-clock",
+    async_add_entities(
+        {
+            OeSMAMeterDateSensor(
+                coordinator=entry.runtime_data.measurement_coordinator,
+                entity_description=OeSMASensorEntityDescription(
+                    key="0-0:1.0.0",
+                    device_class=SensorDeviceClass.DATE,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_visible_default=False,
+                    entity_registry_enabled_default=False,
+                    icon="mdi:calendar-clock",
+                ),
             ),
-        ),
-    })
+        }
+    )
 
 
 class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
+    """Representation of a Smart Meter Adapter measurement sensor."""
+
     def __init__(
-            self,
-            coordinator: SMAMeasurementDataUpdateCoordinator,
-            entity_description: SensorEntityDescription,
+        self,
+        coordinator: SMAMeasurementDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
     ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        self.translation_key = entity_description.translation_key or entity_description.key
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
+        self.translation_key = (
+            entity_description.translation_key or entity_description.key
+        )
 
-        self._attr_native_value = coordinator.data[entity_description.key]['value']
+        self._attr_native_value = coordinator.data[entity_description.key]["value"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]['value']
+        self._attr_native_value = self.coordinator.data[self.entity_description.key][
+            "value"
+        ]
         self.async_write_ha_state()
 
 
 class OeSMAMeterDateSensor(OeSMAMeasurementEntityBase, SensorEntity):
+    """Representation of a Smart Meter Adapter timestamp."""
+
     def __init__(
-            self,
-            coordinator: SMAMeasurementDataUpdateCoordinator,
-            entity_description: SensorEntityDescription,
+        self,
+        coordinator: SMAMeasurementDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
     ) -> None:
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        self.translation_key = entity_description.translation_key or entity_description.key
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
+        )
+        self.translation_key = (
+            entity_description.translation_key or entity_description.key
+        )
 
-        self.set_value(coordinator.data[entity_description.key]['time'])
+        self.set_value(coordinator.data[entity_description.key]["time"])
 
     def set_value(self, value: str | float) -> None:
+        """Set the value based on the timezone of the Home Assistant instance."""
         local_tz = ZoneInfo(self.coordinator.hass.config.time_zone)
         self._attr_native_value = datetime.fromtimestamp(value, tz=local_tz)
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self.set_value(self.coordinator.data[self.entity_description.key]['time'])
+        self.set_value(self.coordinator.data[self.entity_description.key]["time"])
         self.async_write_ha_state()

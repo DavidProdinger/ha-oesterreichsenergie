@@ -1,10 +1,15 @@
+"""The Oesterreichsenergie Smart-Meter-Adapter integration data class."""
+
 from dataclasses import dataclass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.loader import Integration
 
 from .api import SMAApiClient
-from .coordinator import SMAMeasurementDataUpdateCoordinator, SMAStatusDataUpdateCoordinator
+from .coordinator import (
+    SMAMeasurementDataUpdateCoordinator,
+    SMAStatusDataUpdateCoordinator,
+)
 
 type SMAConfigEntry = ConfigEntry[SMAData]
 
