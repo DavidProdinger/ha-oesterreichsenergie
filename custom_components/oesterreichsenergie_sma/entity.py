@@ -24,10 +24,13 @@ class OeSmaEntityDescription(EntityDescription):
     """Describes Oesterreichsenergie Smart-Meter-Adapter entities."""
 
     has_entity_name: bool = True
+    obis_data_key: str | None = "value"
 
 
 class OeSmaMeasurementEntityBase(CoordinatorEntity[OeSmaDataUpdateCoordinator], ABC):
     """Basic entity for Oesterreichsenergie Smart-Meter-Adapter."""
+
+    entity_description: OeSmaEntityDescription
 
     def __init__(
         self,
@@ -50,6 +53,7 @@ class OeSmaMqttEntityBase(Entity, ABC):
     """Basic entity for Oesterreichsenergie Smart-Meter-Adapter MQTT Entities."""
 
     _attr_has_entity_name = True
+    entity_description: OeSmaEntityDescription
 
     def __init__(
         self,

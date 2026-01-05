@@ -141,6 +141,19 @@ ENTITY_DESCRIPTIONS = [
     ),
 ]
 
+DIAGNOSTICS_ENTITY_DESCRIPTIONS = [
+    OeSmaSensorEntityDescription(
+        key="0-0:1.0.0",
+        translation_key="meter_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=False,
+        entity_registry_enabled_default=False,
+        icon="mdi:calendar-clock",
+        obis_data_key="time",
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -164,20 +177,10 @@ async def async_setup_entry_json(
     coordinator = entry.runtime_data.json_measurement_coordinator
 
     async_add_entities(
-        {
-            OeSmaMeterDateSensor(
-                coordinator=coordinator,
-                entity_description=OeSmaSensorEntityDescription(
-                    key="0-0:1.0.0",
-                    translation_key="meter_date",
-                    device_class=SensorDeviceClass.DATE,
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    entity_registry_visible_default=False,
-                    entity_registry_enabled_default=False,
-                    icon="mdi:calendar-clock",
-                ),
-            ),
-        }
+        OeSmaMeterDateSensor(
+            coordinator=coordinator, entity_description=entity_description
+        )
+        for entity_description in DIAGNOSTICS_ENTITY_DESCRIPTIONS
     )
 
     async_add_entities(
@@ -206,7 +209,7 @@ class OeSmaMeasurementSensor(OeSmaMeasurementEntityBase, SensorEntity):
     def __init__(
         self,
         coordinator: OeSmaMeasurementDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: OeSmaSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -219,12 +222,14 @@ class OeSmaMeasurementSensor(OeSmaMeasurementEntityBase, SensorEntity):
         )
 
         if coordinator.data is not None:
-            self._attr_native_value = coordinator.data[entity_description.key]["value"]
+            self._attr_native_value = coordinator.data[entity_description.key][
+                entity_description.obis_data_key
+            ]
 
     @callback
     def _handle_coordinator_update(self) -> None:
         self._attr_native_value = self.coordinator.data[self.entity_description.key][
-            "value"
+            self.entity_description.obis_data_key
         ]
         self.async_write_ha_state()
 
@@ -235,7 +240,7 @@ class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
     def __init__(
         self,
         coordinator: OeSmaMeasurementDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: OeSmaSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -247,7 +252,9 @@ class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
             entity_description.translation_key or entity_description.key
         )
 
-        self.set_value(coordinator.data[entity_description.key]["time"])
+        self.set_value(
+            coordinator.data[entity_description.key][entity_description.obis_data_key]
+        )
 
     def set_value(self, value: str | float) -> None:
         """Set the value based on the timezone of the Home Assistant instance."""
@@ -256,7 +263,11 @@ class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self.set_value(self.coordinator.data[self.entity_description.key]["time"])
+        self.set_value(
+            self.coordinator.data[self.entity_description.key][
+                self.entity_description.obis_data_key
+            ]
+        )
         self.async_write_ha_state()
 
 
@@ -276,5 +287,7 @@ class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
     def update_data(self, measurement: dict[str, Any]) -> None:
         """Update the sensor data."""
         if self.entity_description.key in measurement:
-            self._attr_native_value = measurement[self.entity_description.key]["value"]
+            self._attr_native_value = measurement[self.entity_description.key][
+                self.entity_description.obis_data_key
+            ]
             self.async_write_ha_state()
