@@ -1,23 +1,71 @@
 {
-  "title": "Oesterreichs Energie Smart Meter Adapter",
+  "title": "Österreichs Energie Smart Meter Adapter",
   "config": {
     "step": {
+      "user": {
+        "menu_options": {
+          "json": "JSON",
+          "mqtt_manual": "MQTT"
+        },
+        "menu_option_descriptions": {
+          "json": "Verwenden Sie die JSON-API, um eine Verbindung zum Smart Meter Adapter herzustellen.",
+          "mqtt_manual": "Verwenden Sie die MQTT-API, um eine Verbindung zum Smart Meter Adapter herzustellen."
+        }
+      },
       "json": {
         "description": "Wenn du Hilfe bei der Konfiguration benötigst, schau dir das hier an: https://github.com/DavidProdinger/ha-oesterreichsenergie",
         "data": {
-          "host": "IP Adresse oder Hostname vom Smart Meter Adapter",
-          "verify_ssl": "Verify SSL certificate",
+          "host": "IP / Hostname",
           "token": "Token"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Smart Meter Adapters",
+          "token": "Stellen Sie sicher, dass die JSON-API in den Einstellungen des Smart Meter Adapters aktiviert ist."
+        },
+        "sections": {
+          "options": {
+            "name": "Erweiterte Optionen",
+            "data": {
+              "verify_ssl": "SSL-Zertifikat prüfen"
+            },
+            "data_description": {
+              "verify_ssl": "Muss normalerweise wegen selbstsignierter Zertifikate deaktiviert werden."
+            }
+          }
+        }
+      },
+      "mqtt_manual": {
+        "description": "Es ist nur ein MQTT-Abonnement möglich. Stellen Sie sicher, dass Sie das richtige Topic verwenden, Wildcard-Abonnements werden unterstützt.",
+        "data": {
+          "topic": "Topic",
+          "qos": "Quality of Service"
+        },
+        "data_description": {
+          "topic": "Abonnieren Sie dieses Topic, um die Daten vom Smart Meter Adapter zu erhalten."
+        },
+        "sections": {
+          "options": {
+            "name": "Erweiterte Optionen",
+            "data": {
+              "qos": "QoS"
+            },
+            "data_description": {
+              "qos": "Quality of Service (QoS) für das MQTT-Abonnement. Normalerweise 0."
+            }
+          }
         }
       }
     },
     "error": {
       "auth": "Benutzername/Kennwort ist falsch.",
       "connection": "Verbindung zum Server konnte nicht hergestellt werden.",
-      "unknown": "Unbekannter Fehler ist aufgetreten."
+      "unknown": "Unbekannter Fehler ist aufgetreten.",
+      "invalid_subscribe_topic": "Ungültiges MQTT-Topic."
     },
     "abort": {
-      "already_configured": "Diese Einrichtung ist bereits konfiguriert."
+      "already_configured": "Diese Einrichtung ist bereits konfiguriert.",
+      "single_instance_allowed": "Es ist nur eine einzige Instanz für MQTT erlaubt.",
+      "mqtt_not_enabled": "MQTT-Integration ist nicht aktiviert."
     }
   },
   "device": {

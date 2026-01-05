@@ -1,46 +1,81 @@
-# Oesterreichsenergie Smart-Meter-Adapter
+# Österreichsenergie Smart-Meter-Adapter for Home Assistant
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+![Version](https://img.shields.io/github/v/release/DavidProdinger/ha-oesterreichsenergie?style=for-the-badge)
 
-HAVE FUN! 😎
+This Home Assistant integration allows you to receive data from a Smart Meter Adapter (SMA) as specified by [Österreichs E-Wirtschaft](https://oesterreichsenergie.at/fileadmin/user_upload/Smart_Meter-Plattform/20200201_Konzept_Kundenschnittstelle_SM.pdf).
 
-## Why?
+The integration supports two ways of communication:
+- **JSON API**: Polling the adapter directly via HTTP/HTTPS.
+- **MQTT**: Receiving real-time updates pushed by the adapter to an MQTT broker.
 
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
+## Features
 
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
+- **JSON API Support**: 
+  - Periodic polling of measurement and status data.
+  - Automatic device creation for the adapter and the connected meter.
+- **MQTT Support**:
+  - Real-time updates.
+  - **Dynamic Meter Discovery**: Automatically creates a new Home Assistant device for every unique smart meter encountered on the subscribed MQTT topic.
+  - Availability tracking: Sensors are marked as `unavailable` if no data is received for 5 minutes.
+- **Comprehensive Sensors**: Supports a wide range of OBIS codes including active/reactive energy (import/export), instantaneous power, voltage, and current for all three phases.
 
-## What?
+## Installation
 
-This repository contains multiple files, here is a overview:
+### Via HACS (Recommended)
 
-File | Purpose | Documentation
--- | -- | --
-`.devcontainer.json` | Used for development/testing with Visual Studio Code. | [Documentation](https://code.visualstudio.com/docs/remote/containers)
-`.github/ISSUE_TEMPLATE/*.yml` | Templates for the issue tracker | [Documentation](https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository)
-`custom_components/integration_blueprint/*` | Integration files, this is where everything happens. | [Documentation](https://developers.home-assistant.io/docs/creating_component_index)
-`CONTRIBUTING.md` | Guidelines on how to contribute. | [Documentation](https://help.github.com/en/github/building-a-strong-community/setting-guidelines-for-repository-contributors)
-`LICENSE` | The license file for the project. | [Documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository)
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions. | [Documentation](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
-`requirements.txt` | Python packages used for development/lint/testing this integration. | [Documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files)
+1. Open **HACS** in your Home Assistant instance.
+2. Click on the three dots in the upper right corner and select **Custom repositories**.
+3. Enter `https://github.com/DavidProdinger/ha-oesterreichsenergie` in the URL field.
+4. Select **Integration** as the category.
+5. Click **Add**.
+6. Find the **Österreichsenergie Smart Meter Adapter** integration and click **Download**.
+7. Restart Home Assistant.
 
-## How?
+### Manual Installation
 
-1. Create a new repository in GitHub, using this repository as a template by clicking the "Use this template" button in the GitHub UI.
-1. Open your new repository in Visual Studio Code devcontainer (Preferably with the "`Dev Containers: Clone Repository in Named Container Volume...`" option).
-1. Rename all instances of the `integration_blueprint` to `custom_components/<your_integration_domain>` (e.g. `custom_components/awesome_integration`).
-1. Rename all instances of the `Integration Blueprint` to `<Your Integration Name>` (e.g. `Awesome Integration`).
-1. Run the `scripts/develop` to start HA and test out your new integration.
+1. Copy the `custom_components/oesterreichsenergie_sma` directory to your Home Assistant `custom_components` directory.
+2. Restart Home Assistant.
 
-## Next steps
+## Configuration
 
-These are some next steps you may want to look into:
-- Add tests to your integration, [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) can help you get started.
-- Add brand images (logo/icon) to https://github.com/home-assistant/brands.
-- Create your first release.
-- Share your integration on the [Home Assistant Forum](https://community.home-assistant.io/).
-- Submit your integration to [HACS](https://hacs.xyz/docs/publish/start).
+1. In Home Assistant, go to **Settings** > **Devices & Services**.
+2. Click **Add Integration** and search for **Österreichsenergie Smart Meter Adapter**.
+3. Choose your preferred connection method:
+
+### JSON API
+- **Host**: The IP address or hostname of your Smart Meter Adapter (e.g., `192.168.1.100`).
+- **Token**: The API token configured on your adapter.
+- **Verify SSL**: Whether to verify the SSL certificate (usually `False` for self-signed certificates).
+
+### MQTT
+- **Topic**: The MQTT topic the adapter is publishing to (default: `sma`). The integration will subscribe to this topic and automatically discover all meters sending data there.
+- **QoS**: MQTT Quality of Service level (default: `0`).
+
+## Supported OBIS Codes
+
+The following measurements are currently supported (depending on your meter and adapter configuration):
+
+| OBIS Code  | Description                     |
+|------------|---------------------------------|
+| 0-0:96.1.0 | Meter number                    |
+| 1-0:1.8.0  | Active Energy Import (A+)       |
+| 1-0:2.8.0  | Active Energy Export (A-)       |
+| 1-0:3.8.0  | Reactive Energy Import (R+)     |
+| 1-0:4.8.0  | Reactive Energy Export (R-)     |
+| 1-0:1.7.0  | Instantaneous Power Import (+P) |
+| 1-0:2.7.0  | Instantaneous Power Export (-P) |
+| 1-0:32.7.0 | Voltage L1                      |
+| 1-0:52.7.0 | Voltage L2                      |
+| 1-0:72.7.0 | Voltage L3                      |
+| 1-0:31.7.0 | Current L1                      |
+| 1-0:51.7.0 | Current L2                      |
+| 1-0:71.7.0 | Current L3                      |
+
+## Contributing
+
+If you want to contribute to this project, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

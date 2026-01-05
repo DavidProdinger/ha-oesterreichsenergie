@@ -60,11 +60,12 @@
       "auth": "Username/Password is wrong.",
       "connection": "Unable to connect to the server.",
       "unknown": "Unknown error occurred.",
-      "invalid_subscribe_topic": "Invalid subscribe topic.",
-      "mqtt_not_enabled": "MQTT integration is not enabled."
+      "invalid_subscribe_topic": "Invalid subscribe topic."
     },
     "abort": {
-      "already_configured": "This entry is already configured."
+      "already_configured": "This entry is already configured.",
+      "single_instance_allowed": "Only a single instance is allowed for MQTT.",
+      "mqtt_not_enabled": "MQTT integration is not enabled."
     }
   },
   "device": {
@@ -96,22 +97,22 @@
         "name": "Instantaneous export active power -P"
       },
       "voltage_l1": {
-        "name": "Instantaneous voltage L1"
+        "name": "Voltage L1"
       },
       "voltage_l2": {
-        "name": "Instantaneous voltage L2"
+        "name": "Voltage L2"
       },
       "voltage_l3": {
-        "name": "Instantaneous voltage L3"
+        "name": "Voltage L3"
       },
       "current_l1": {
-        "name": "Instantaneous current L1"
+        "name": "Current L1"
       },
       "current_l2": {
-        "name": "Instantaneous current L2"
+        "name": "Current L2"
       },
       "current_l3": {
-        "name": "Instantaneous current L3"
+        "name": "Current L3"
       },
       "meter_date": {
         "name": "Meter date"
