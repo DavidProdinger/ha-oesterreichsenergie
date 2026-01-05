@@ -6,19 +6,27 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.loader import Integration
 
 from .api import SMAApiClient
+from .const import OeSmaApiType
 from .coordinator import (
-    SMAMeasurementDataUpdateCoordinator,
-    SMAStatusDataUpdateCoordinator,
+    OeSmaMeasurementDataUpdateCoordinator,
+    OeSmaMqttDataUpdateCoordinator,
+    OeSmaStatusDataUpdateCoordinator,
 )
 
-type SMAConfigEntry = ConfigEntry[SMAData]
+type OeSmaConfigEntry = ConfigEntry[OeSmaData]
 
 
 @dataclass
-class SMAData:
+class OeSmaData:
     """Data for the Oesterreichsenergie Smart-Meter-Adapter."""
 
-    client: SMAApiClient
-    measurement_coordinator: SMAMeasurementDataUpdateCoordinator
-    status_coordinator: SMAStatusDataUpdateCoordinator
+    type: OeSmaApiType
     integration: Integration
+
+    # JSON specific
+    json_client: SMAApiClient | None = None
+    json_measurement_coordinator: OeSmaMeasurementDataUpdateCoordinator | None = None
+    json_status_coordinator: OeSmaStatusDataUpdateCoordinator | None = None
+
+    # MQTT specific
+    mqtt_coordinator: OeSmaMqttDataUpdateCoordinator | None = None

@@ -4,19 +4,19 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import (
-    SMADataUpdateCoordinatorBase,
-    SMAMeasurementDataUpdateCoordinator,
+    OeSmaDataUpdateCoordinator,
+    OeSmaMeasurementDataUpdateCoordinator,
 )
 
 
-class OeSMAMeasurementEntityBase(CoordinatorEntity[SMADataUpdateCoordinatorBase]):
+class OeSMAMeasurementEntityBase(CoordinatorEntity[OeSmaDataUpdateCoordinator]):
     """Basic entity for Oesterreichsenergie Smart-Meter-Adapter."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SMAMeasurementDataUpdateCoordinator,
+        coordinator: OeSmaMeasurementDataUpdateCoordinator,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -25,7 +25,7 @@ class OeSMAMeasurementEntityBase(CoordinatorEntity[SMADataUpdateCoordinatorBase]
             identifiers={
                 (
                     coordinator.config_entry.domain,
-                    f"{coordinator.config_entry.entry_id}-meter",
+                    f"{coordinator.config_entry.options.get('type')}-{coordinator.config_entry.entry_id}-meter",
                 )
             },
         )

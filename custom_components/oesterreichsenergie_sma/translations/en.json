@@ -3,16 +3,65 @@
   "config": {
     "step": {
       "user": {
+        "menu_options": {
+          "json": "JSON",
+          "mqtt_manual": "MQTT"
+        },
+        "menu_option_descriptions": {
+          "json": "Use the JSON API to connect to the Smart Meter Adapter.",
+          "mqtt_manual": "Use the MQTT API to connect to the Smart Meter Adapter."
+        }
+      },
+      "json": {
         "description": "If you need help with the configuration have a look here: https://github.com/DavidProdinger/ha-oesterreichsenergie",
         "data": {
-
+          "host": "IP / Hostname",
+          "token": "Token"
+        },
+        "data_description": {
+          "host": "IP Address or hostname of the Smart Meter Adapter",
+          "token": "Make sure to enable the JSON API in the Smart Meter Adapter settings."
+        },
+        "sections": {
+          "options": {
+            "name": "Advanced options",
+            "data": {
+              "verify_ssl": "Verify SSL certificate"
+            },
+            "data_description": {
+              "verify_ssl": "Usually needed to be disabled due to self-signed certificates."
+            }
+          }
+        }
+      },
+      "mqtt_manual": {
+        "description": "Only one MQTT subscription is possible. Make sure to use the correct topic, wildcard subscriptions are supported.",
+        "data": {
+          "topic": "Topic",
+          "qos": "Quality of Service"
+        },
+        "data_description": {
+          "topic": "Subscribe to this topic to receive the data from the Smart Meter Adapter."
+        },
+        "sections": {
+          "options": {
+            "name": "Advanced options",
+            "data": {
+              "qos": "QoS"
+            },
+            "data_description": {
+              "qos": "Quality of Service (QoS) for the MQTT subscription. It is usually 0."
+            }
+          }
         }
       }
     },
     "error": {
       "auth": "Username/Password is wrong.",
       "connection": "Unable to connect to the server.",
-      "unknown": "Unknown error occurred."
+      "unknown": "Unknown error occurred.",
+      "invalid_subscribe_topic": "Invalid subscribe topic.",
+      "mqtt_not_enabled": "MQTT integration is not enabled."
     },
     "abort": {
       "already_configured": "This entry is already configured."
@@ -29,10 +78,10 @@
   "entity": {
     "sensor": {
       "active_energy_import": {
-        "name": "Forward active energy +A"
+        "name": "Import active energy +A"
       },
       "active_energy_export": {
-        "name": "Reverse active energy -A"
+        "name": "Export active energy -A"
       },
       "reactive_energy_import": {
         "name": "Import reactive energy +R"
@@ -41,10 +90,10 @@
         "name": "Export reactive energy -R"
       },
       "power_import": {
-        "name": "Instantaneous forward active power +P"
+        "name": "Instantaneous import active power +P"
       },
       "power_export": {
-        "name": "Instantaneous reverse active power -P"
+        "name": "Instantaneous export active power -P"
       },
       "voltage_l1": {
         "name": "Instantaneous voltage L1"

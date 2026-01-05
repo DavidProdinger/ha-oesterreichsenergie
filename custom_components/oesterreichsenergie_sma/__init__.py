@@ -10,24 +10,34 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL, Platform
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt import CONF_QOS, CONF_TOPIC, ReceiveMessage
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_OPTIONS,
+    CONF_TOKEN,
+    CONF_VERIFY_SSL,
+    Platform,
+)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import SMAApiClient
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, OeSmaApiType
 from .coordinator import (
-    SMAMeasurementDataUpdateCoordinator,
-    SMAStatusDataUpdateCoordinator,
+    OeSmaMeasurementDataUpdateCoordinator,
+    OeSmaMqttDataUpdateCoordinator,
+    OeSmaStatusDataUpdateCoordinator,
 )
-from .data import SMAData
+from .data import OeSmaData
 from .obis import get_meter_number
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import HomeAssistant, callback
 
-    from .data import SMAConfigEntry
+    from .data import OeSmaConfigEntry
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -37,41 +47,61 @@ PLATFORMS: list[Platform] = [
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: SMAConfigEntry,
+    entry: OeSmaConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
-    measurement_coordinator = SMAMeasurementDataUpdateCoordinator(
+    setup_return = False
+
+    match entry.options.get("type"):
+        case OeSmaApiType.JSON:
+            setup_return = await _async_setup_json_entry(hass, entry)
+        case OeSmaApiType.MQTT:
+            setup_return = await _async_setup_mqtt_entry(hass, entry)
+        case _:
+            LOGGER.error("Unknown API type: %s", entry.options.get("type"))
+            return False
+
+    if setup_return:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    return setup_return
+
+
+async def _async_setup_json_entry(hass: HomeAssistant, entry: OeSmaConfigEntry) -> bool:
+    """Set up this integration using JSON configuration."""
+    measurement_coordinator = OeSmaMeasurementDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
         update_interval=timedelta(seconds=15),
     )
-    status_coordinator = SMAStatusDataUpdateCoordinator(
+    status_coordinator = OeSmaStatusDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
         update_interval=timedelta(hours=1),
     )
 
-    entry.runtime_data = SMAData(
-        client=SMAApiClient(
+    entry.runtime_data = OeSmaData(
+        type=OeSmaApiType.JSON,
+        json_client=SMAApiClient(
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
             session=async_get_clientsession(
-                hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+                hass,
+                # default to false due to the self-signed certificates
+                verify_ssl=entry.data[CONF_OPTIONS][CONF_VERIFY_SSL] or False,
             ),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
-        measurement_coordinator=measurement_coordinator,
-        status_coordinator=status_coordinator,
+        json_measurement_coordinator=measurement_coordinator,
+        json_status_coordinator=status_coordinator,
     )
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
     await measurement_coordinator.async_config_entry_first_refresh()
     await status_coordinator.async_config_entry_first_refresh()
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # create devices
     device_registry = dr.async_get(hass)
@@ -106,9 +136,42 @@ async def async_setup_entry(
     return True
 
 
+async def _async_setup_mqtt_entry(hass: HomeAssistant, entry: OeSmaConfigEntry) -> bool:
+    """Set up this integration using MQTT configuration."""
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        msg = "MQTT integration is not enabled."
+        LOGGER.warning(msg)
+        raise ConfigEntryNotReady(msg)
+
+    mqtt_coordinator = OeSmaMqttDataUpdateCoordinator(
+        hass=hass,
+        logger=LOGGER,
+        name=DOMAIN,
+        update_interval=timedelta(hours=1),
+    )
+
+    entry.runtime_data = OeSmaData(
+        type=OeSmaApiType.MQTT,
+        integration=async_get_loaded_integration(hass, entry.domain),
+        mqtt_coordinator=mqtt_coordinator,
+    )
+
+    unsubscribe_handler = await mqtt.async_subscribe(
+        hass,
+        topic=entry.data[CONF_TOPIC],
+        msg_callback=mqtt_coordinator.message_received,
+        qos=entry.data[CONF_OPTIONS][CONF_QOS] or 0,
+    )
+    entry.async_on_unload(unsubscribe_handler)
+
+    await mqtt_coordinator.async_config_entry_first_refresh()
+
+    return True
+
+
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: SMAConfigEntry,
+    entry: OeSmaConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -116,7 +179,7 @@ async def async_unload_entry(
 
 async def async_reload_entry(
     hass: HomeAssistant,
-    entry: SMAConfigEntry,
+    entry: OeSmaConfigEntry,
 ) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)

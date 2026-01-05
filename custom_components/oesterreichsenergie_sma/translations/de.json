@@ -2,7 +2,7 @@
   "title": "Oesterreichs Energie Smart Meter Adapter",
   "config": {
     "step": {
-      "user": {
+      "json": {
         "description": "Wenn du Hilfe bei der Konfiguration benötigst, schau dir das hier an: https://github.com/DavidProdinger/ha-oesterreichsenergie",
         "data": {
           "host": "IP Adresse oder Hostname vom Smart Meter Adapter",

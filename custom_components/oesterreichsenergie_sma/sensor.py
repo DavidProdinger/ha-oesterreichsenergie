@@ -21,8 +21,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import SMAMeasurementDataUpdateCoordinator
-from .data import SMAConfigEntry
+from . import OeSmaApiType
+from .coordinator import OeSmaMeasurementDataUpdateCoordinator
+from .data import OeSmaConfigEntry
 from .entity import OeSMAMeasurementEntityBase
 
 
@@ -133,34 +134,43 @@ ENTITY_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
-    entry: SMAConfigEntry,
+    entry: OeSmaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    async_add_entities(
-        OeSMAMeasurementSensor(
-            coordinator=entry.runtime_data.measurement_coordinator,
-            entity_description=entity_description,
-        )
-        for entity_description in ENTITY_DESCRIPTIONS
-    )
+    coordinator = None
 
-    async_add_entities(
-        {
-            OeSMAMeterDateSensor(
-                coordinator=entry.runtime_data.measurement_coordinator,
-                entity_description=OeSMASensorEntityDescription(
-                    key="0-0:1.0.0",
-                    translation_key="meter_date",
-                    device_class=SensorDeviceClass.DATE,
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    entity_registry_visible_default=False,
-                    entity_registry_enabled_default=False,
-                    icon="mdi:calendar-clock",
-                ),
-            ),
-        }
-    )
+    match entry.runtime_data.type:
+        case OeSmaApiType.JSON:
+            coordinator = entry.runtime_data.json_measurement_coordinator
+
+            async_add_entities(
+                {
+                    OeSMAMeterDateSensor(
+                        coordinator=coordinator,
+                        entity_description=OeSMASensorEntityDescription(
+                            key="0-0:1.0.0",
+                            translation_key="meter_date",
+                            device_class=SensorDeviceClass.DATE,
+                            entity_category=EntityCategory.DIAGNOSTIC,
+                            entity_registry_visible_default=False,
+                            entity_registry_enabled_default=False,
+                            icon="mdi:calendar-clock",
+                        ),
+                    ),
+                }
+            )
+        case OeSmaApiType.MQTT:
+            coordinator = entry.runtime_data.mqtt_coordinator
+
+    if coordinator is not None:
+        async_add_entities(
+            OeSMAMeasurementSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+            for entity_description in ENTITY_DESCRIPTIONS
+        )
 
 
 class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
@@ -168,7 +178,7 @@ class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
 
     def __init__(
         self,
-        coordinator: SMAMeasurementDataUpdateCoordinator,
+        coordinator: OeSmaMeasurementDataUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -181,7 +191,8 @@ class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
             entity_description.translation_key or entity_description.key
         )
 
-        self._attr_native_value = coordinator.data[entity_description.key]["value"]
+        if coordinator.data is not None:
+            self._attr_native_value = coordinator.data[entity_description.key]["value"]
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -196,7 +207,7 @@ class OeSMAMeterDateSensor(OeSMAMeasurementEntityBase, SensorEntity):
 
     def __init__(
         self,
-        coordinator: SMAMeasurementDataUpdateCoordinator,
+        coordinator: OeSmaMeasurementDataUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

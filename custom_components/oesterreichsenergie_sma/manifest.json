@@ -1,6 +1,9 @@
 {
   "domain": "oesterreichsenergie_sma",
   "name": "Österreichsenergie Smart-Meter-Adapter",
+  "after_dependencies": [
+    "mqtt"
+  ],
   "codeowners": [
     "@DavidProdinger"
   ],
