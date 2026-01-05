@@ -37,6 +37,18 @@ The integration supports two ways of communication:
 1. Copy the `custom_components/oesterreichsenergie_sma` directory to your Home Assistant `custom_components` directory.
 2. Restart Home Assistant.
 
+## Removal
+
+### Via HACS
+1. Go to **HACS** > **Integrations**.
+2. Find **Österreichsenergie Smart Meter Adapter**.
+3. Click on the three dots and select **Remove**.
+4. Restart Home Assistant.
+
+### Manual Removal
+1. Remove the `custom_components/oesterreichsenergie_sma` directory from your Home Assistant installation.
+2. Restart Home Assistant.
+
 ## Configuration
 
 1. In Home Assistant, go to **Settings** > **Devices & Services**.
