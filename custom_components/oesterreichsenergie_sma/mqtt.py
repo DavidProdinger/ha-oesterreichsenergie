@@ -63,7 +63,7 @@ class OeSmaMqttMessageHandler:
             return
 
         if meter_number not in self.known_meters:
-            self._register_new_meter(meter_number)
+            self._register_new_meter(meter_number, measurement)
 
         # Update entities
         if meter_number in self.entities:
@@ -71,7 +71,7 @@ class OeSmaMqttMessageHandler:
                 if hasattr(entity, "update_data"):
                     entity.update_data(measurement)
 
-    def _register_new_meter(self, meter_number: str) -> None:
+    def _register_new_meter(self, meter_number: str, measurement: dict) -> None:
         """Register a new meter and its entities."""
         LOGGER.debug("Registering new meter: %s", meter_number)
         self.known_meters.add(meter_number)
@@ -80,7 +80,8 @@ class OeSmaMqttMessageHandler:
         self.device_registry.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             identifiers={(DOMAIN, f"mqtt_{meter_number}")},
-            name=f"{meter_number}",
+            name=f"Smart Meter - {measurement["name"]}",
+            model=meter_number,
             serial_number=meter_number,
         )
 
