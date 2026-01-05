@@ -6,24 +6,18 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_QOS, CONF_TOPIC, valid_subscribe_topic
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryFlow,
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_OPTIONS,
     CONF_TOKEN,
-    CONF_TYPE,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
-    SelectSelector,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -79,7 +73,8 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        _: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # noinspection PyTypeChecker

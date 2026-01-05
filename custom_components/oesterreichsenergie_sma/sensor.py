@@ -1,7 +1,10 @@
 """Representation of Oesterreichsenergie Smart-Meter-Adapter sensors."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
@@ -19,21 +22,28 @@ from homeassistant.const import (
     UnitOfReactiveEnergy,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OeSmaApiType
-from .coordinator import OeSmaMeasurementDataUpdateCoordinator
-from .data import OeSmaConfigEntry
-from .entity import OeSMAMeasurementEntityBase
+from .const import OeSmaApiType
+from .entity import (
+    OeSmaEntityDescription,
+    OeSmaMeasurementEntityBase,
+    OeSmaMqttEntityBase,
+)
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import OeSmaMeasurementDataUpdateCoordinator
+    from .data import OeSmaConfigEntry
 
 
 @dataclass(frozen=True)
-class OeSMASensorEntityDescription(SensorEntityDescription):
+class OeSmaSensorEntityDescription(OeSmaEntityDescription, SensorEntityDescription):
     """Describes Oesterreichsenergie Smart-Meter-Adapter sensor entities."""
 
 
 ENTITY_DESCRIPTIONS = [
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:1.8.0",
         translation_key="active_energy_import",
         device_class=SensorDeviceClass.ENERGY,
@@ -41,7 +51,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:2.8.0",
         translation_key="active_energy_export",
         device_class=SensorDeviceClass.ENERGY,
@@ -49,7 +59,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:3.8.0",
         translation_key="reactive_energy_import",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
@@ -57,7 +67,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         suggested_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:4.8.0",
         translation_key="reactive_energy_export",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
@@ -65,7 +75,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         suggested_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:1.7.0",
         translation_key="power_import",
         device_class=SensorDeviceClass.POWER,
@@ -73,7 +83,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.WATT,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:2.7.0",
         translation_key="power_export",
         device_class=SensorDeviceClass.POWER,
@@ -81,7 +91,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_unit_of_measurement=UnitOfPower.WATT,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:32.7.0",
         translation_key="voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -89,7 +99,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:52.7.0",
         translation_key="voltage_l2",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -97,7 +107,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:72.7.0",
         translation_key="voltage_l3",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -105,7 +115,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:31.7.0",
         translation_key="current_l1",
         device_class=SensorDeviceClass.CURRENT,
@@ -113,7 +123,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:51.7.0",
         translation_key="current_l2",
         device_class=SensorDeviceClass.CURRENT,
@@ -121,7 +131,7 @@ ENTITY_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
-    OeSMASensorEntityDescription(
+    OeSmaSensorEntityDescription(
         key="1-0:71.7.0",
         translation_key="current_l3",
         device_class=SensorDeviceClass.CURRENT,
@@ -133,47 +143,64 @@ ENTITY_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,
     entry: OeSmaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = None
-
     match entry.runtime_data.type:
         case OeSmaApiType.JSON:
-            coordinator = entry.runtime_data.json_measurement_coordinator
-
-            async_add_entities(
-                {
-                    OeSMAMeterDateSensor(
-                        coordinator=coordinator,
-                        entity_description=OeSMASensorEntityDescription(
-                            key="0-0:1.0.0",
-                            translation_key="meter_date",
-                            device_class=SensorDeviceClass.DATE,
-                            entity_category=EntityCategory.DIAGNOSTIC,
-                            entity_registry_visible_default=False,
-                            entity_registry_enabled_default=False,
-                            icon="mdi:calendar-clock",
-                        ),
-                    ),
-                }
-            )
+            await async_setup_entry_json(hass, entry, async_add_entities)
         case OeSmaApiType.MQTT:
-            coordinator = entry.runtime_data.mqtt_coordinator
+            await async_setup_entry_mqtt(hass, entry, async_add_entities)
 
-    if coordinator is not None:
-        async_add_entities(
-            OeSMAMeasurementSensor(
+
+async def async_setup_entry_json(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: OeSmaConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform for JSON API."""
+    coordinator = entry.runtime_data.json_measurement_coordinator
+
+    async_add_entities(
+        {
+            OeSmaMeterDateSensor(
                 coordinator=coordinator,
-                entity_description=entity_description,
-            )
-            for entity_description in ENTITY_DESCRIPTIONS
+                entity_description=OeSmaSensorEntityDescription(
+                    key="0-0:1.0.0",
+                    translation_key="meter_date",
+                    device_class=SensorDeviceClass.DATE,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_visible_default=False,
+                    entity_registry_enabled_default=False,
+                    icon="mdi:calendar-clock",
+                ),
+            ),
+        }
+    )
+
+    async_add_entities(
+        OeSmaMeasurementSensor(
+            coordinator=coordinator,
+            entity_description=entity_description,
         )
+        for entity_description in ENTITY_DESCRIPTIONS
+    )
 
 
-class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
+async def async_setup_entry_mqtt(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: OeSmaConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform for MQTT API."""
+    entry.runtime_data.mqtt_message_handler.register_platform(
+        async_add_entities, OeSmaMqttSensor, ENTITY_DESCRIPTIONS
+    )
+
+
+class OeSmaMeasurementSensor(OeSmaMeasurementEntityBase, SensorEntity):
     """Representation of a Smart Meter Adapter measurement sensor."""
 
     def __init__(
@@ -202,7 +229,7 @@ class OeSMAMeasurementSensor(OeSMAMeasurementEntityBase, SensorEntity):
         self.async_write_ha_state()
 
 
-class OeSMAMeterDateSensor(OeSMAMeasurementEntityBase, SensorEntity):
+class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
     """Representation of a Smart Meter Adapter timestamp."""
 
     def __init__(
@@ -231,3 +258,23 @@ class OeSMAMeterDateSensor(OeSMAMeasurementEntityBase, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         self.set_value(self.coordinator.data[self.entity_description.key]["time"])
         self.async_write_ha_state()
+
+
+class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
+    """Representation of a Smart Meter Adapter MQTT sensor."""
+
+    def __init__(
+        self,
+        entry: OeSmaConfigEntry,
+        meter_number: str,
+        entity_description: OeSmaSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(entry, meter_number, entity_description)
+
+    @callback
+    def update_data(self, measurement: dict[str, Any]) -> None:
+        """Update the sensor data."""
+        if self.entity_description.key in measurement:
+            self._attr_native_value = measurement[self.entity_description.key]["value"]
+            self.async_write_ha_state()

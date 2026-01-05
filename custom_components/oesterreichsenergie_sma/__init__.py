@@ -10,8 +10,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONF_QOS, CONF_TOPIC, ReceiveMessage
+from homeassistant.components import mqtt as mqtt_integration
+from homeassistant.components.mqtt import CONF_QOS, CONF_TOPIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_OPTIONS,
@@ -28,14 +28,14 @@ from .api import SMAApiClient
 from .const import DOMAIN, LOGGER, OeSmaApiType
 from .coordinator import (
     OeSmaMeasurementDataUpdateCoordinator,
-    OeSmaMqttDataUpdateCoordinator,
     OeSmaStatusDataUpdateCoordinator,
 )
 from .data import OeSmaData
+from .mqtt import OeSmaMqttMessageHandler
 from .obis import get_meter_number
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant, callback
+    from homeassistant.core import HomeAssistant
 
     from .data import OeSmaConfigEntry
 
@@ -138,33 +138,26 @@ async def _async_setup_json_entry(hass: HomeAssistant, entry: OeSmaConfigEntry) 
 
 async def _async_setup_mqtt_entry(hass: HomeAssistant, entry: OeSmaConfigEntry) -> bool:
     """Set up this integration using MQTT configuration."""
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        msg = "MQTT integration is not enabled."
+    if not await mqtt_integration.async_wait_for_mqtt_client(hass):
+        msg = "MQTT integration is not available."
         LOGGER.warning(msg)
         raise ConfigEntryNotReady(msg)
 
-    mqtt_coordinator = OeSmaMqttDataUpdateCoordinator(
-        hass=hass,
-        logger=LOGGER,
-        name=DOMAIN,
-        update_interval=timedelta(hours=1),
-    )
+    message_handler = OeSmaMqttMessageHandler(hass, entry)
 
     entry.runtime_data = OeSmaData(
         type=OeSmaApiType.MQTT,
         integration=async_get_loaded_integration(hass, entry.domain),
-        mqtt_coordinator=mqtt_coordinator,
+        mqtt_message_handler=message_handler,
     )
 
-    unsubscribe_handler = await mqtt.async_subscribe(
+    unsubscribe_handler = await mqtt_integration.async_subscribe(
         hass,
         topic=entry.data[CONF_TOPIC],
-        msg_callback=mqtt_coordinator.message_received,
+        msg_callback=message_handler.message_received,
         qos=entry.data[CONF_OPTIONS][CONF_QOS] or 0,
     )
     entry.async_on_unload(unsubscribe_handler)
-
-    await mqtt_coordinator.async_config_entry_first_refresh()
 
     return True
 
