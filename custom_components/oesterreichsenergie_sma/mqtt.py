@@ -5,11 +5,12 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
-from .obis import get_meter_number
+from .obis import OBIS_CODES, OBIS_SCHEMA, get_meter_number
 
 if TYPE_CHECKING:
     from homeassistant.components.mqtt import ReceiveMessage
@@ -18,6 +19,17 @@ if TYPE_CHECKING:
 
     from .data import OeSmaConfigEntry
     from .entity import OeSmaEntityDescription, OeSmaMqttEntityBase
+
+
+SCHEMA_MQTT_MESSAGE = vol.Schema(
+    {
+        vol.Required("name"): str,
+        vol.Required(
+            vol.Any(*OBIS_CODES.keys(), msg="Invalid OBIS code provided")
+        ): OBIS_SCHEMA,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 class OeSmaMqttMessageHandler:
@@ -54,8 +66,12 @@ class OeSmaMqttMessageHandler:
         """Handle new MQTT messages."""
         try:
             measurement = json.loads(msg.payload)
+            SCHEMA_MQTT_MESSAGE(measurement)
         except json.JSONDecodeError as exc:
             LOGGER.error("Failed to parse MQTT message payload: %s", exc)
+            return
+        except vol.Invalid as exc:
+            LOGGER.warning("Invalid MQTT message payload: %s", exc)
             return
 
         meter_number = get_meter_number(measurement)
@@ -80,7 +96,7 @@ class OeSmaMqttMessageHandler:
         self.device_registry.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             identifiers={(DOMAIN, f"mqtt_{meter_number}")},
-            name=f"Smart Meter - {measurement["name"]}",
+            name=f"Smart Meter - {measurement['name']}",
             model=meter_number,
             serial_number=meter_number,
         )

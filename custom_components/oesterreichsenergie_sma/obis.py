@@ -4,6 +4,8 @@ Class for various OBIS codes.
 Extracted from https://oesterreichsenergie.at/fileadmin/user_upload/Smart_Meter-Plattform/20200201_Konzept_Kundenschnittstelle_SM.pdf.
 """
 
+import voluptuous as vol
+
 OBIS_CODES = {
     "0-0:1.0.0": "Date and time",
     "0-0:C.1.0": "Meter serial number",
@@ -72,6 +74,14 @@ OBIS_CODES = {
     "1-0:81.7.62": "Winkel U(L3) zu I(L3)",
     "1-3:0.2.8": "P1 port DSMR version",
 }
+
+
+OBIS_SCHEMA = vol.Schema(
+    {
+        vol.Required("value"): vol.Any(str, int, float),
+        vol.Optional("time"): vol.Any(float, int),
+    },
+)
 
 
 def get_meter_number(data: dict) -> str | None:
