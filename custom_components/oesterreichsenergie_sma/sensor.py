@@ -152,7 +152,7 @@ DIAGNOSTICS_ENTITY_DESCRIPTIONS = [
         translation_key="meter_date",
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_visible_default=False,
+        entity_registry_visible_default=True,
         entity_registry_enabled_default=False,
         icon="mdi:calendar-clock",
         obis_data_key="time",
@@ -179,21 +179,12 @@ async def async_setup_entry_json(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform for JSON API."""
-    coordinator = entry.runtime_data.json_measurement_coordinator
-
-    async_add_entities(
-        OeSmaMeterDateSensor(
-            coordinator=coordinator, entity_description=entity_description
-        )
-        for entity_description in DIAGNOSTICS_ENTITY_DESCRIPTIONS
-    )
-
     async_add_entities(
         OeSmaMeasurementSensor(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data.json_measurement_coordinator,
             entity_description=entity_description,
         )
-        for entity_description in ENTITY_DESCRIPTIONS
+        for entity_description in ENTITY_DESCRIPTIONS + DIAGNOSTICS_ENTITY_DESCRIPTIONS
     )
 
 
@@ -204,7 +195,9 @@ async def async_setup_entry_mqtt(
 ) -> None:
     """Set up the sensor platform for MQTT API."""
     entry.runtime_data.mqtt_message_handler.register_platform(
-        async_add_entities, OeSmaMqttSensor, ENTITY_DESCRIPTIONS
+        async_add_entities,
+        OeSmaMqttSensor,
+        ENTITY_DESCRIPTIONS + DIAGNOSTICS_ENTITY_DESCRIPTIONS,
     )
 
 
@@ -233,48 +226,23 @@ class OeSmaMeasurementSensor(OeSmaMeasurementEntityBase, SensorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_native_value = self.coordinator.data[self.entity_description.key][
+        if not self._verified_state_writable:
+            return
+
+        value = self.coordinator.data[self.entity_description.key][
             self.entity_description.obis_data_key
         ]
+
+        if self.entity_description.device_class in [
+            SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.DATE,
+        ]:
+            local_tz = ZoneInfo(self.hass.config.time_zone)
+            self._attr_native_value = datetime.fromtimestamp(value, tz=local_tz)
+        else:
+            self._attr_native_value = value
+
         self.async_write_ha_state()
-
-
-class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
-    """Representation of a Smart Meter Adapter timestamp."""
-
-    def __init__(
-        self,
-        coordinator: OeSmaMeasurementDataUpdateCoordinator,
-        entity_description: OeSmaSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
-        )
-        self.translation_key = (
-            entity_description.translation_key or entity_description.key
-        )
-
-        self.set_value(
-            coordinator.data[entity_description.key][entity_description.obis_data_key]
-        )
-
-    def set_value(self, value: str | float) -> None:
-        """Set the value based on the timezone of the Home Assistant instance."""
-        local_tz = ZoneInfo(self.coordinator.hass.config.time_zone)
-        self._attr_native_value = datetime.fromtimestamp(value, tz=local_tz)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self.set_value(
-            self.coordinator.data[self.entity_description.key][
-                self.entity_description.obis_data_key
-            ]
-        )
-        if self._verified_state_writable:
-            self.async_write_ha_state()
 
 
 class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
@@ -292,11 +260,21 @@ class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
     @callback
     def update_data(self, measurement: dict[str, Any]) -> None:
         """Update the sensor data."""
+        if not self._verified_state_writable:
+            return
+
         if self.entity_description.key in measurement:
-            self._attr_native_value = measurement[self.entity_description.key][
+            value = measurement[self.entity_description.key][
                 self.entity_description.obis_data_key
             ]
 
-            # check if the entity is not disabled
-            if self._verified_state_writable:
-                self.async_write_ha_state()
+            if self.entity_description.device_class in [
+                SensorDeviceClass.TIMESTAMP,
+                SensorDeviceClass.DATE,
+            ]:
+                local_tz = ZoneInfo(self.hass.config.time_zone)
+                self._attr_native_value = datetime.fromtimestamp(value, tz=local_tz)
+            else:
+                self._attr_native_value = value
+
+            self.async_write_ha_state()

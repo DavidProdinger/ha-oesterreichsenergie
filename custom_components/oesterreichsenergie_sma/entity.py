@@ -71,3 +71,7 @@ class OeSmaMqttEntityBase(Entity, ABC):
             identifiers={(entry.domain, f"mqtt_{meter_number}")},
             serial_number=meter_number,
         )
+
+    def set_available(self, *, available: bool = True) -> None:
+        """Set availability of the entity."""
+        self._attr_available = available

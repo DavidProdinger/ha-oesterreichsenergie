@@ -294,6 +294,8 @@ class OeSmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         if topic_hint:
+            if not user_input:
+                user_input = {}
             user_input[CONF_TOPIC] = topic_hint
 
         if self.source == SOURCE_RECONFIGURE:

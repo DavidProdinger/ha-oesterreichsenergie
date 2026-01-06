@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import time
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, LOGGER
 from .obis import OBIS_CODES, OBIS_SCHEMA, get_meter_number
@@ -50,6 +53,14 @@ class OeSmaMqttMessageHandler:
         self.device_registry: DeviceRegistry = dr.async_get(hass)
         self.known_meters: set[str] = set()
         self.entities: dict[str, list[OeSmaMqttEntityBase]] = {}
+        self.last_update: dict[str, float] = {}
+
+        # Check for stale meters every minute
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass, self._check_stale_meters, timedelta(minutes=1)
+            )
+        )
 
     @callback
     def register_platform(
@@ -78,12 +89,15 @@ class OeSmaMqttMessageHandler:
         if meter_number is None:
             return
 
+        self.last_update[meter_number] = time.time()
+
         if meter_number not in self.known_meters:
             self._register_new_meter(meter_number, measurement)
 
         # Update entities
         if meter_number in self.entities:
             for entity in self.entities[meter_number]:
+                entity.set_available()
                 if hasattr(entity, "update_data"):
                     entity.update_data(measurement)
 
@@ -105,6 +119,20 @@ class OeSmaMqttMessageHandler:
             new_entities = []
             for description in descriptions:
                 entity = entity_class(self.entry, meter_number, description)
+                entity.set_available()
                 new_entities.append(entity)
                 self.entities[meter_number].append(entity)
             async_add_entities(new_entities)
+
+    @callback
+    def _check_stale_meters(self, _now: datetime) -> None:
+        """Check for meters that haven't sent data for 1 hour."""
+        now = time.time()
+        stale_threshold = 3600  # 1 hour in seconds
+
+        for meter_number, last_update in self.last_update.items():
+            if now - last_update > stale_threshold and meter_number in self.entities:
+                for entity in self.entities[meter_number]:
+                    if entity.available:
+                        entity.set_available(available=False)
+                        entity.async_write_ha_state()
