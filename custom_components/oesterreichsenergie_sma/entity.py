@@ -30,6 +30,7 @@ class OeSmaEntityDescription(EntityDescription):
 class OeSmaMeasurementEntityBase(CoordinatorEntity[OeSmaDataUpdateCoordinator], ABC):
     """Basic entity for Oesterreichsenergie Smart-Meter-Adapter."""
 
+    _attr_has_entity_name = True
     entity_description: OeSmaEntityDescription
 
     def __init__(

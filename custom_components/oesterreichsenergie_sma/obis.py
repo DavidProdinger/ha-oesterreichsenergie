@@ -4,6 +4,10 @@ Class for various OBIS codes.
 Extracted from https://oesterreichsenergie.at/fileadmin/user_upload/Smart_Meter-Plattform/20200201_Konzept_Kundenschnittstelle_SM.pdf.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 OBIS_CODES = {
@@ -84,7 +88,7 @@ OBIS_SCHEMA = vol.Schema(
 )
 
 
-def get_meter_number(data: dict) -> str | None:
+def get_meter_number(data: dict[str, Any]) -> str | None:
     """Try to extract meter number from data."""
     meter_numbers = [
         "0-0:96.1.0",

@@ -8,15 +8,15 @@ import aiohttp
 import async_timeout
 
 
-class SMAApiClientError(Exception):
+class OeSmaApiClientError(Exception):
     """General Smart Meter API client error."""
 
 
-class SMAApiClientCommunicationError(SMAApiClientError):
+class OeSmaApiClientCommunicationError(OeSmaApiClientError):
     """Exception to indicate a communication error."""
 
 
-class SMAApiClientAuthenticationError(SMAApiClientError):
+class OeSmaApiClientAuthenticationError(OeSmaApiClientError):
     """Exception to indicate an authentication error."""
 
 
@@ -24,14 +24,14 @@ def _verify_response_or_raise(response: aiohttp.ClientResponse) -> None:
     """Verify that the response is valid."""
     if response.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
         msg = "Invalid credentials"
-        raise SMAApiClientAuthenticationError(msg)
+        raise OeSmaApiClientAuthenticationError(msg)
     if response.status == HTTPStatus.NOT_FOUND:
         msg = "Not found"
-        raise SMAApiClientCommunicationError(msg)
+        raise OeSmaApiClientCommunicationError(msg)
     response.raise_for_status()
 
 
-class SMAApiClient:
+class OeSmaApiClient:
     """Client for the Smart Meter Adapter."""
 
     def __init__(
@@ -74,16 +74,21 @@ class SMAApiClient:
 
         except TimeoutError as exception:
             msg = f"Timeout error fetching information - {exception}"
-            raise SMAApiClientCommunicationError(
+            raise OeSmaApiClientCommunicationError(
                 msg,
             ) from exception
         except (aiohttp.ClientError, socket.gaierror) as exception:
             msg = f"Error fetching information - {exception}"
-            raise SMAApiClientCommunicationError(
+            raise OeSmaApiClientCommunicationError(
+                msg,
+            ) from exception
+        except OeSmaApiClientAuthenticationError as exception:
+            msg = f"Authentication error - {exception}"
+            raise OeSmaApiClientAuthenticationError(
                 msg,
             ) from exception
         except Exception as exception:  # pylint: disable=broad-except
             msg = f"Error with the API client! - {exception}"
-            raise SMAApiClientError(
+            raise OeSmaApiClientError(
                 msg,
             ) from exception

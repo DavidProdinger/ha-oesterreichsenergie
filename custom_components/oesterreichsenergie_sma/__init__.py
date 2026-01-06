@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
-from .api import SMAApiClient
+from .api import OeSmaApiClient
 from .const import DOMAIN, LOGGER, OeSmaApiType
 from .coordinator import (
     OeSmaMeasurementDataUpdateCoordinator,
@@ -85,7 +85,7 @@ async def _async_setup_json_entry(hass: HomeAssistant, entry: OeSmaConfigEntry) 
 
     entry.runtime_data = OeSmaData(
         type=OeSmaApiType.JSON,
-        json_client=SMAApiClient(
+        json_client=OeSmaApiClient(
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
             session=async_get_clientsession(
@@ -176,3 +176,20 @@ async def async_reload_entry(
 ) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    config_entry: OeSmaConfigEntry,
+    device_entry: dr.DeviceEntry,  # noqa: ARG001 Unused function argument: `device_entry`
+) -> bool:
+    """Remove a config entry from a device."""
+    runtime_data = config_entry.runtime_data
+
+    match runtime_data.type:
+        case OeSmaApiType.JSON:
+            return not runtime_data.json_measurement_coordinator.last_update_success
+        case OeSmaApiType.MQTT:
+            return True
+
+    return False

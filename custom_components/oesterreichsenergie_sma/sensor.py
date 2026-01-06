@@ -37,6 +37,9 @@ if TYPE_CHECKING:
     from .data import OeSmaConfigEntry
 
 
+PARALLEL_UPDATES = 1
+
+
 @dataclass(frozen=True)
 class OeSmaSensorEntityDescription(OeSmaEntityDescription, SensorEntityDescription):
     """Describes Oesterreichsenergie Smart-Meter-Adapter sensor entities."""
@@ -66,6 +69,7 @@ ENTITY_DESCRIPTIONS = [
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         suggested_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        entity_registry_enabled_default=False,
     ),
     OeSmaSensorEntityDescription(
         key="1-0:4.8.0",
@@ -74,6 +78,7 @@ ENTITY_DESCRIPTIONS = [
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         suggested_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        entity_registry_enabled_default=False,
     ),
     OeSmaSensorEntityDescription(
         key="1-0:1.7.0",
@@ -268,7 +273,8 @@ class OeSmaMeterDateSensor(OeSmaMeasurementEntityBase, SensorEntity):
                 self.entity_description.obis_data_key
             ]
         )
-        self.async_write_ha_state()
+        if self._verified_state_writable:
+            self.async_write_ha_state()
 
 
 class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
@@ -290,4 +296,7 @@ class OeSmaMqttSensor(OeSmaMqttEntityBase, SensorEntity):
             self._attr_native_value = measurement[self.entity_description.key][
                 self.entity_description.obis_data_key
             ]
-            self.async_write_ha_state()
+
+            # check if the entity is not disabled
+            if self._verified_state_writable:
+                self.async_write_ha_state()

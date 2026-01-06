@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_QOS, CONF_TOPIC, valid_subscribe_topic
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -26,12 +27,18 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.util import slugify
 
 from .api import (
-    SMAApiClient,
-    SMAApiClientAuthenticationError,
-    SMAApiClientCommunicationError,
-    SMAApiClientError,
+    OeSmaApiClient,
+    OeSmaApiClientAuthenticationError,
+    OeSmaApiClientCommunicationError,
+    OeSmaApiClientError,
 )
-from .const import DOMAIN, LOGGER, OeSmaApiType
+from .const import (
+    DEFAULT_TOPIC,
+    DOMAIN,
+    LOGGER,
+    REDACTED_TOKEN_PLACEHOLDER,
+    OeSmaApiType,
+)
 
 DATA_SCHEMA_SETUP_JSON = vol.Schema(
     {
@@ -54,7 +61,7 @@ DATA_SCHEMA_SETUP_JSON = vol.Schema(
 
 DATA_SCHEMA_SETUP_MQTT = vol.Schema(
     {
-        vol.Required(CONF_TOPIC, default="sma"): TextSelector(),
+        vol.Required(CONF_TOPIC, default=DEFAULT_TOPIC): TextSelector(),
         vol.Optional(CONF_OPTIONS): section(
             vol.Schema(
                 {
@@ -67,10 +74,74 @@ DATA_SCHEMA_SETUP_MQTT = vol.Schema(
 )
 
 
-class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
+class OeSmaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Smart Meter Adapter."""
 
     VERSION = 1
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        entry = self._get_reconfigure_entry()
+        match entry.options.get("type"):
+            case OeSmaApiType.JSON:
+                # noinspection PyTypeChecker
+                return await self.async_step_json(user_input)
+            case OeSmaApiType.MQTT:
+                # noinspection PyTypeChecker
+                return await self.async_step_mqtt_manual(user_input)
+
+        # noinspection PyTypeChecker
+        return await self.async_step_user(user_input)
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        # noinspection PyTypeChecker
+        return await self.async_step_reauth_confirm(entry_data)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication."""
+        if user_input is not None and user_input.get(CONF_TOKEN):
+            # This is called from the form
+            reauth_entry = self._get_reauth_entry()
+            data = dict(reauth_entry.data)
+            data[CONF_TOKEN] = user_input[CONF_TOKEN]
+
+            try:
+                await self._get_status(
+                    host=data[CONF_HOST],
+                    verify_ssl=data[CONF_OPTIONS][CONF_VERIFY_SSL],
+                    token=data[CONF_TOKEN],
+                )
+            except OeSmaApiClientAuthenticationError:
+                # noinspection PyTypeChecker
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+                    errors={"base": "auth"},
+                )
+            except Exception:  # pylint: disable=broad-except  # noqa: BLE001
+                # noinspection PyTypeChecker
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+                    errors={"base": "unknown"},
+                )
+
+            # noinspection PyTypeChecker
+            return self.async_update_reload_and_abort(
+                reauth_entry,
+                data=data,
+            )
+
+        # noinspection PyTypeChecker
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+        )
 
     async def async_step_user(
         self,
@@ -95,19 +166,28 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
 
             user_input[CONF_HOST] = user_input[CONF_HOST].strip("/")
 
+            if (
+                self.source == SOURCE_RECONFIGURE
+                and user_input[CONF_TOKEN] == REDACTED_TOKEN_PLACEHOLDER
+            ):
+                # keep the token if not changed
+                user_input[CONF_TOKEN] = self._get_reconfigure_entry().data.get(
+                    CONF_TOKEN
+                )
+
             try:
                 status = await self._get_status(
                     host=user_input[CONF_HOST],
                     verify_ssl=user_input[CONF_OPTIONS][CONF_VERIFY_SSL],
                     token=user_input[CONF_TOKEN],
                 )
-            except SMAApiClientAuthenticationError as exception:
+            except OeSmaApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
-            except SMAApiClientCommunicationError as exception:
+            except OeSmaApiClientCommunicationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "connection"
-            except SMAApiClientError as exception:
+            except OeSmaApiClientError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "unknown"
             else:
@@ -116,6 +196,14 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
                         status["wifi"]["mac"] or status["name"] or user_input[CONF_HOST]
                     )
                 )
+
+                if self.source == SOURCE_RECONFIGURE:
+                    # noinspection PyTypeChecker
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data=user_input,
+                    )
+
                 self._abort_if_unique_id_configured()
 
                 # noinspection PyTypeChecker
@@ -126,10 +214,16 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={"type": OeSmaApiType.JSON},
                 )
 
+        if self.source == SOURCE_RECONFIGURE:
+            user_input = dict(self._get_reconfigure_entry().data)
+            user_input[CONF_TOKEN] = REDACTED_TOKEN_PLACEHOLDER
+
         # noinspection PyTypeChecker
         return self.async_show_form(
             step_id="json",
-            data_schema=DATA_SCHEMA_SETUP_JSON,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_SETUP_JSON, user_input
+            ),
             errors=_errors,
         )
 
@@ -141,7 +235,7 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
         token: str,
     ) -> Any:
         """Get the status of the Smart Meter Adapter via JSON API."""
-        client = SMAApiClient(
+        client = OeSmaApiClient(
             host=host,
             token=token,
             session=async_create_clientsession(self.hass, verify_ssl=verify_ssl),
@@ -182,6 +276,14 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
                 _errors[CONF_TOPIC] = "invalid_subscribe_topic"
             else:
                 await self.async_set_unique_id(unique_id=OeSmaApiType.MQTT)
+
+                if self.source == SOURCE_RECONFIGURE:
+                    # noinspection PyTypeChecker
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data=user_input,
+                    )
+
                 self._abort_if_unique_id_configured()
 
                 # noinspection PyTypeChecker
@@ -191,11 +293,17 @@ class SMAConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={"type": OeSmaApiType.MQTT},
                 )
 
+        if topic_hint:
+            user_input[CONF_TOPIC] = topic_hint
+
+        if self.source == SOURCE_RECONFIGURE:
+            user_input = dict(self._get_reconfigure_entry().data)
+
         # noinspection PyTypeChecker
         return self.async_show_form(
             step_id="mqtt_manual",
             data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA_SETUP_MQTT, {CONF_TOPIC: topic_hint}
+                DATA_SCHEMA_SETUP_MQTT, user_input
             ),
             errors=_errors,
         )

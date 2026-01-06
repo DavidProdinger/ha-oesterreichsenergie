@@ -12,8 +12,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .api import (
-    SMAApiClientAuthenticationError,
-    SMAApiClientError,
+    OeSmaApiClientAuthenticationError,
+    OeSmaApiClientError,
 )
 
 if TYPE_CHECKING:
@@ -34,9 +34,11 @@ class OeSmaDataUpdateCoordinator(ABC, DataUpdateCoordinator):
         """Update data via library."""
         try:
             return await self._update_method()
-        except SMAApiClientAuthenticationError as exception:
+        except OeSmaApiClientAuthenticationError as exception:
+            self.last_update_success = False
             raise ConfigEntryAuthFailed(exception) from exception
-        except SMAApiClientError as exception:
+        except OeSmaApiClientError as exception:
+            self.last_update_success = False
             raise UpdateFailed(exception) from exception
 
 

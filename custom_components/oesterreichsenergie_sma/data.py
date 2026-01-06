@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 if TYPE_CHECKING:
     from homeassistant.loader import Integration
 
-    from .api import SMAApiClient
+    from .api import OeSmaApiClient
     from .const import OeSmaApiType
     from .coordinator import (
         OeSmaMeasurementDataUpdateCoordinator,
@@ -29,7 +29,7 @@ class OeSmaData:
     integration: Integration
 
     # JSON specific
-    json_client: SMAApiClient | None = None
+    json_client: OeSmaApiClient | None = None
     json_measurement_coordinator: OeSmaMeasurementDataUpdateCoordinator | None = None
     json_status_coordinator: OeSmaStatusDataUpdateCoordinator | None = None
 

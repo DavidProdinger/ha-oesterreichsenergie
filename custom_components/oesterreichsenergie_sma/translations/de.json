@@ -50,9 +50,15 @@
               "qos": "QoS"
             },
             "data_description": {
-              "qos": "Quality of Service (QoS) für das MQTT-Abonnement. Normalerweise 0."
+              "qos": "Quality of Service (QoS) for das MQTT-Abonnement. Normalerweise 0."
             }
           }
+        }
+      },
+      "reauth_confirm": {
+        "description": "Bitte geben Sie das neue API-Token für den Smart Meter Adapter ein.",
+        "data": {
+          "token": "Token"
         }
       }
     },
@@ -65,7 +71,9 @@
     "abort": {
       "already_configured": "Diese Einrichtung ist bereits konfiguriert.",
       "single_instance_allowed": "Es ist nur eine einzige Instanz für MQTT erlaubt.",
-      "mqtt_not_enabled": "MQTT-Integration ist nicht aktiviert."
+      "mqtt_not_enabled": "MQTT-Integration ist nicht aktiviert.",
+      "reauth_successful": "Re-Authentifizierung erfolgreich.",
+      "reconfigure_successful": "Neu-Konfiguration erfolgreich."
     }
   },
   "device": {

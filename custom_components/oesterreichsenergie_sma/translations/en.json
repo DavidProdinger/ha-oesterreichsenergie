@@ -54,6 +54,12 @@
             }
           }
         }
+      },
+      "reauth_confirm": {
+        "description": "Please provide the new API token for the Smart Meter Adapter.",
+        "data": {
+          "token": "Token"
+        }
       }
     },
     "error": {
@@ -65,7 +71,9 @@
     "abort": {
       "already_configured": "This entry is already configured.",
       "single_instance_allowed": "Only a single instance is allowed for MQTT.",
-      "mqtt_not_enabled": "MQTT integration is not enabled."
+      "mqtt_not_enabled": "MQTT integration is not enabled.",
+      "reauth_successful": "Reauthentication successful.",
+      "reconfigure_successful": "Reconfiguration successful."
     }
   },
   "device": {
@@ -91,10 +99,10 @@
         "name": "Export reactive energy -R"
       },
       "power_import": {
-        "name": "Instantaneous import active power +P"
+        "name": "Import active power +P"
       },
       "power_export": {
-        "name": "Instantaneous export active power -P"
+        "name": "Export active power -P"
       },
       "voltage_l1": {
         "name": "Voltage L1"
