@@ -13,14 +13,14 @@
         }
       },
       "json": {
-        "description": "If you need help with the configuration have a look here: https://github.com/DavidProdinger/ha-oesterreichsenergie",
+        "description": "Make sure to enable the JSON API in the Smart Meter Adapter settings.",
         "data": {
           "host": "IP / Hostname",
           "token": "Token"
         },
         "data_description": {
           "host": "IP Address or hostname of the Smart Meter Adapter",
-          "token": "Make sure to enable the JSON API in the Smart Meter Adapter settings."
+          "token": "Token for the JSON API."
         },
         "sections": {
           "options": {
